@@ -22,8 +22,11 @@ public class UserRoleCheckAop {
 
     private final ObjectMapper objectMapper;
 
-    @Around("execution(* org.example.expert.domain.user.service.UserAdminService.*(..))")
-    public Object userAdminApiLogging(ProceedingJoinPoint joinPoint) throws Throwable {
+    @Around(
+            "execution(* org.example.expert.domain.user.service.UserAdminService.*(..)) || "+
+            "execution(* org.example.expert.domain.comment.service.CommentAdminService.*(..))"
+    )
+    public Object adminApiLogging(ProceedingJoinPoint joinPoint) throws Throwable {
         ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
         HttpServletRequest request = attributes.getRequest();
 
@@ -33,6 +36,7 @@ public class UserRoleCheckAop {
         String requestBodyJson = convertToJson(joinPoint.getArgs()); // 요청 RequestBody
 
         log.info("""
+                
                 [ADMIN API 요청]
                 사용자 ID: {}
                 요청 시각: {}
@@ -51,48 +55,7 @@ public class UserRoleCheckAop {
         String responseBodyJson = convertToJson(result); // 응답 ResponseBody
 
         log.info("""
-                [ADMIN API 응답]
-                사용자 ID: {}
-                요청 URL: {}
-                응답 ResponseBody(JSON): {}
-                """,
-                userId,
-                requestUrl,
-                responseBodyJson
-        );
-
-        return result;
-    }
-
-    @Around("execution(* org.example.expert.domain.comment.service.CommentAdminService.*(..))")
-    public Object commentAdminApiLogging(ProceedingJoinPoint joinPoint) throws Throwable {
-        ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
-        HttpServletRequest request = attributes.getRequest();
-
-        Long userId = (Long) request.getAttribute("userId");
-        LocalDateTime requestTime = LocalDateTime.now();
-        String requestUrl = request.getRequestURI();
-        String requestBodyJson = convertToJson(joinPoint.getArgs()); // 요청 RequestBody
-
-        log.info("""
-                [ADMIN API 요청]
-                사용자 ID: {}
-                요청 시각: {}
-                요청 URL: {}
-                요청 RequestBody(JSON): {}
-                """,
-                userId,
-                requestTime,
-                requestUrl,
-                requestBodyJson
-        );
-
-        // 메서드 시행
-        Object result = joinPoint.proceed();
-
-        String responseBodyJson = convertToJson(result); // 응답 ResponseBody
-
-        log.info("""
+                
                 [ADMIN API 응답]
                 사용자 ID: {}
                 요청 URL: {}
